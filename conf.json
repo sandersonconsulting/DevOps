@@ -1,0 +1,6 @@
+{
+    "splunk": {
+        "hec_url": "https://splunk.blah.net",
+        "token": "SuperSecretToken"
+    }
+}
