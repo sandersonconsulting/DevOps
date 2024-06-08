@@ -1,19 +1,15 @@
 import boto3
+import botocore.session
 import requests
 import json
-
-# AWS credentials and region
-aws_access_key = 'YOUR_AWS_ACCESS_KEY'
-aws_secret_key = 'YOUR_AWS_SECRET_KEY'
-aws_region = 'YOUR_AWS_REGION'
 
 # Splunk HEC configuration
 splunk_hec_url = 'YOUR_SPLUNK_HEC_URL'
 splunk_token = 'YOUR_SPLUNK_HEC_TOKEN'
 
-def get_bucket_size(bucket_name):
+def get_bucket_size(bucket_name, session):
     total_size = 0
-    s3 = boto3.client('s3', aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key, region_name=aws_region)
+    s3 = session.client('s3')
     paginator = s3.get_paginator('list_objects_v2')
     response_iterator = paginator.paginate(Bucket=bucket_name)
 
@@ -23,13 +19,13 @@ def get_bucket_size(bucket_name):
 
     return total_size
 
-def list_bucket_sizes():
-    s3 = boto3.client('s3', aws_access_key_id=aws_access_key, aws_secret_access_key=aws_secret_key, region_name=aws_region)
+def list_bucket_sizes(session):
+    s3 = session.client('s3')
     response = s3.list_buckets()
 
     for bucket in response['Buckets']:
         bucket_name = bucket['Name']
-        bucket_size = get_bucket_size(bucket_name)
+        bucket_size = get_bucket_size(bucket_name, session)
         send_to_splunk(bucket_name, bucket_size)
 
 def send_to_splunk(bucket_name, bucket_size):
@@ -45,4 +41,5 @@ def send_to_splunk(bucket_name, bucket_size):
         print(f"Failed to send data to Splunk: {response.text}")
 
 if __name__ == "__main__":
-    list_bucket_sizes()
+    session = botocore.session.Session(profile='default')  # Use 'default' profile from ~/.aws/credentials
+    list_bucket_sizes(session)
