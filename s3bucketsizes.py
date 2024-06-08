@@ -1,11 +1,12 @@
+import os
 import boto3
 import botocore.session
 import requests
 import json
 
 # Splunk HEC configuration
-splunk_hec_url = 'YOUR_SPLUNK_HEC_URL'
-splunk_token = 'YOUR_SPLUNK_HEC_TOKEN'
+splunk_hec_url_env_variable = 'SPLUNK_HEC_URL'
+splunk_token_env_variable = 'SPLUNK_TOKEN'
 
 def get_bucket_size(bucket_name, session):
     total_size = 0
@@ -29,6 +30,17 @@ def list_bucket_sizes(session):
         send_to_splunk(bucket_name, bucket_size)
 
 def send_to_splunk(bucket_name, bucket_size):
+    splunk_hec_url = os.environ.get(splunk_hec_url_env_variable)
+    splunk_token = os.environ.get(splunk_token_env_variable)
+    
+    if not splunk_hec_url:
+        print("Splunk HEC URL environment variable not set.")
+        return
+
+    if not splunk_token:
+        print("Splunk token environment variable not set.")
+        return
+
     headers = {'Authorization': f'Splunk {splunk_token}'}
     data = {
         "event": {
